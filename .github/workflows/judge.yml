@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: 
+      - main
+    paths:
+      - 'judge/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@main
+
+    - name: Get the version
+      id: vars
+      run: echo ::set-output name=tag::$(grep -o -P '(?<=<Version>)[\d\.]+(?=<\/Version>)' judge/*.csproj)
+
+    - name: Build the Docker image
+      run: docker build . --file judge/Dockerfile --tag shumutun/bluescape-judge:${{steps.vars.outputs.tag}}
+
+    - name: Login to registry
+      run: docker login --username ${{ secrets.DOCKER_USERNAME }} --password ${{ secrets.DOCKER_TOKEN }}
+      
+    - name: Push the Docker image
+      run: docker push shumutun/bluescape-judge:${{steps.vars.outputs.tag}}
+
