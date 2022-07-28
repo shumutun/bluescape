@@ -5,4 +5,4 @@ WORKDIR /app
 COPY app/ .
 RUN npm install
 RUN npm run build
-ENTRYPOINT [ "node", "/app/build/<RunFileName>" ]
+ENTRYPOINT [ "node", "/app/build/<RunFileName>.js" ]

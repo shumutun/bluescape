@@ -10,14 +10,7 @@ namespace judge.ImageContent.Typescript
 {
     public class TypescriptImageContentBuider : ImageContentBuider
     {
-        protected override (string content, string error) GetDockerfileContent(DirectoryInfo submission)
-        {
-            var runFileNameMatch = Regex.Match(submission.Name, ".*_(.*)");
-            if (!runFileNameMatch.Success)
-                return (null, "Invalid submission name");
-            var dockerfileTemplate = GetDockerfileTemplate(Languages.Typescript);
-            return (dockerfileTemplate.Replace("<RunFileName>", $"{runFileNameMatch.Groups[1].Value}.js"), null);
-        }
+        protected override Languages Language => Languages.Typescript;
 
         protected override (bool success, string error) AddSubmissionContent(string rootPath, TarOutputStream archive, DirectoryInfo submission)
         {

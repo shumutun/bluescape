@@ -43,7 +43,7 @@ The solution implies that test data and candidates' submissions are located in a
 |   |   |-python
 |   |   |   |-candidate3_app
 |   |   |   |	|-app.py
-|   |   |   |-candidate4_script
+|   |   |   |-candidate4
 |   |   |   |	|-script.py
 ```
 
@@ -60,7 +60,7 @@ where:
 <ExpectedResult>    - True or False.
 ```
 
-The regexp that is used to parse a code filename: 
+The regex pattern that is used to parse a code filename: 
 ```console
 .*_(True|False)\.txt
 ```
@@ -71,13 +71,17 @@ The current version supports the following languages:
 * typescript
 * python
 
-Inside a submission subdirectory should be a file with the same name as the subdirectory name. It will be used as a run file.
+There is a naming convention for subdirectory names: the submission subdirectory name should end with a name of a run file without extension. The regex pattern is following:
+```console
+.*_(.*)$"
+```
+which is mean that the rest of a subdirectory name after _ will be used to determine what file in the subdirectory should be run. If a subdirectory contains only one file - this one will be run. 
 
 ### Run
 To run the application the assessments directory should be mapped to the /app/assessments directory in its docker container. The following command runs the application:
 
 ```console
-docker run --privileged -it -v assessments:/app/assesments shumutun/bluescape-judge:1.2
+docker run --privileged -it -v assessments:/app/assesments shumutun/bluescape-judge:1.3
 ```
 The first runs of each type of submission (for each language) will take additional time to download and cache its base images (e.g., python base image, node base image, etc.).
 

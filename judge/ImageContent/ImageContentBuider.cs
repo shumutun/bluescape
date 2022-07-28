@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace judge.ImageContent
 {
@@ -34,7 +35,18 @@ namespace judge.ImageContent
             return (true, null);
         }
 
-        protected abstract (string content, string error) GetDockerfileContent(DirectoryInfo submission);
+        protected abstract Languages Language { get; }
+        protected virtual (string content, string error) GetDockerfileContent(DirectoryInfo submission)
+        {
+            var dockerfileTemplate = GetDockerfileTemplate(Language);
+            var files = submission.GetFiles();
+            if (files.Length == 1)
+                return (dockerfileTemplate.Replace("<RunFileName>", $"{Path.GetFileNameWithoutExtension(files[0].Name)}"), null);
+            var runFileNameMatch = Regex.Match(submission.Name, ".*_(.*)$");
+            if (!runFileNameMatch.Success)
+                return (null, "Invalid submission name");
+            return (dockerfileTemplate.Replace("<RunFileName>", $"{runFileNameMatch.Groups[1].Value}"), null);
+        }
 
         protected static Stream GetSubmissionStream(DirectoryInfo submission, string dockerFile)
         {
