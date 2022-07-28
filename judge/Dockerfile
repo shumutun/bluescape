@@ -4,7 +4,7 @@ COPY . .
 RUN dotnet publish judge/judge.csproj -c Release -o /app
 
 # Build runtime image
-FROM docker:dind
+FROM docker:dind-rootless
 
 USER root
 
