@@ -16,7 +16,7 @@ The solution allows to keep all test containers and images in a single place and
 
 ### Package Diagram
 
-![Package Diagram](https://github.com/shumutun/bluescape/blob/main/JudgePackageDiagram.png?raw=true)
+![Package Diagram](.github/blobs/JudgePackageDiagram.png)
 
 ## Usage
 ### Preparation
