@@ -36,7 +36,7 @@ The solution implies that test data and candidates' submissions are located in a
 |   |   |   |-candidate2_bluescape
 |   |   |   |	|-node_modules
 |   |   |   |	|	|-typescript
-|   |   |   |	|	|	|-<files>
+|   |   |   |	|	|	|-...
 |   |   |   |	|-bluescape.ts
 |   |   |   |	|-package.json
 |   |   |   |	|-tsconfig.json

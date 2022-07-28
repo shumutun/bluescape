@@ -16,8 +16,8 @@ namespace Judge
     {
         static void Main(string[] args)
         {
-            //const string path = "/app/assesments";
-            const string path = "../../bluescape-judge-assesments";
+            const string path = "/app/assesments";
+            //const string path = "../../bluescape-judge-assesments";
 
             Console.WriteLine("Preparing for a court session...");
 
