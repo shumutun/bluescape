@@ -77,7 +77,7 @@ Inside a submission subdirectory should be a file with the same name as the subd
 To run the application the assessments directory should be mapped to the /app/assessments directory in its docker container. The following command runs the application:
 
 ```console
-docker run --privileged -it -v assessments:/app/assesments shumutun/bluescape-judge:1.0
+docker run --privileged -it -v assessments:/app/assesments shumutun/bluescape-judge:1.2
 ```
 The first runs of each type of submission (for each language) will take additional time to download and cache its base images (e.g., python base image, node base image, etc.).
 
@@ -88,3 +88,4 @@ The results of checks will be printed in the console for evaluation.
 * [Docker:dind](https://github.com/docker): a base image that allows running docker in docker. It runs a dockerd process inside a container which provides an API to manage images and containers
 * [Docker.DotNet](https://github.com/dotnet/Docker.DotNet): a .NET Core library that wraps the docker API and provides the ability to communicate with it in a .NET Core application
 * [SharpZipLib](https://github.com/icsharpcode/SharpZipLib): a .NET Core library that allows wrapping necessary data in a TAR structure to pass it for a docker image building. 
+* [Newtonsoft.Json](https://www.newtonsoft.com/json): a .NET Core library that helps to work with JSON.

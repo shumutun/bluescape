@@ -7,6 +7,6 @@ namespace judge.ImageContent
 {
     public interface IImageContentBuider
     {
-        Stream BuildImageContent(DirectoryInfo submission);
+        (Stream content, string error) BuildImageContent(DirectoryInfo submission);
     }
 }

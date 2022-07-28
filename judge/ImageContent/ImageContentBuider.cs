@@ -7,7 +7,7 @@ namespace judge.ImageContent
 {
     public abstract class ImageContentBuider : IImageContentBuider
     {
-        public Stream BuildImageContent(DirectoryInfo submission)
+        public (Stream content, string error) BuildImageContent(DirectoryInfo submission)
         {
             var tarball = new MemoryStream();
             using var archive = new TarOutputStream(tarball, Encoding.UTF8)
@@ -15,20 +15,26 @@ namespace judge.ImageContent
                 IsStreamOwner = false
             };
             var dockerFile = GetDockerfileContent(submission);
-            using var dockerfileStream = new MemoryStream(Encoding.UTF8.GetBytes(dockerFile));
+            if (dockerFile.content == null)
+                return (null, dockerFile.error);
+            using var dockerfileStream = new MemoryStream(Encoding.UTF8.GetBytes(dockerFile.content));
             TarAppFile(null, "Dockerfile", dockerfileStream, archive);
-            AddSubmissionContent("app", archive, submission);
+
+            var addSubmissionContentRes = AddSubmissionContent("app", archive, submission);
+            if (!addSubmissionContentRes.success)
+                return (null, addSubmissionContentRes.error);
             archive.Close();
             tarball.Position = 0;
-            return tarball;
+            return (tarball, null);
         }
 
-        protected virtual void AddSubmissionContent(string rootPath, TarOutputStream archive, DirectoryInfo submission)
+        protected virtual (bool success, string error) AddSubmissionContent(string rootPath, TarOutputStream archive, DirectoryInfo submission)
         {
             TarAppDir(rootPath, submission, archive);
+            return (true, null);
         }
 
-        protected abstract string GetDockerfileContent(DirectoryInfo submission);
+        protected abstract (string content, string error) GetDockerfileContent(DirectoryInfo submission);
 
         protected static Stream GetSubmissionStream(DirectoryInfo submission, string dockerFile)
         {

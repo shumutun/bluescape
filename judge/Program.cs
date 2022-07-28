@@ -1,6 +1,5 @@
 ﻿using Docker.DotNet;
 using Docker.DotNet.Models;
-using ICSharpCode.SharpZipLib.Tar;
 using judge.ImageContent;
 using System;
 using System.Collections.Generic;
@@ -17,7 +16,8 @@ namespace Judge
     {
         static void Main(string[] args)
         {
-            const string path = "/app/assesments";
+            //const string path = "/app/assesments";
+            const string path = "../../bluescape-judge-assesments";
 
             Console.WriteLine("Preparing for a court session...");
 
@@ -60,7 +60,7 @@ namespace Judge
             {
                 foreach (var submission in languageSubmissions.GetDirectories())
                 {
-                    Console.Write($"The judge reviewing the case '{submission.Name}'...");
+                    Console.Write($"The judge reviewing the case '{languageSubmissions.Name}: {submission.Name}'...");
                     var res = await RunSubmission(dockerClient, languageSubmissions.Name, submission, codes);
                     Console.WriteLine($" The decision on the case: {res}");
                 }
@@ -80,15 +80,14 @@ namespace Judge
 
         static async Task<string> RunSubmission(DockerClient dockerClient, string lang, DirectoryInfo submission, (FileInfo fileInfo, bool expectedRes)[] codes)
         {
-
-            var containerId = await CreateContainer(dockerClient, lang, submission);
-            if (containerId == null)
-                return "Can't build an image";
+            var createContainerRes = await CreateContainer(dockerClient, lang, submission);
+            if (createContainerRes.containerId == null)
+                return createContainerRes.error;
             var successCount = 0;
             var execTime = 0.0;
             foreach (var (fileInfo, expectedRes) in codes)
             {
-                var res = await RunSubmissionForCode(dockerClient, containerId, fileInfo);
+                var res = await RunSubmissionForCode(dockerClient, createContainerRes.containerId, fileInfo);
                 if (!res.resp.HasValue)
                     return $"Error occured while checking the code '{fileInfo.Name}': {res.err}";
                 if (expectedRes == res.resp.Value)
@@ -99,76 +98,55 @@ namespace Judge
             return $"Score: {successCount} / {codes.Length} in {TimeSpan.FromMilliseconds(execTime).ToString("c")}";
         }
 
-        static async Task<string> BuildImage(DockerClient dockerClient, string lang, DirectoryInfo submission)
+        static async Task<(string imageId, string error)> BuildImage(DockerClient dockerClient, string lang, DirectoryInfo submission)
         {
-            using var content = ImageContentBuidersFactory.GetImageContentBuider(lang).BuildImageContent(submission);
-            var logs = new List<string>();
-            await dockerClient.Images.BuildImageFromDockerfileAsync(new ImageBuildParameters(), content, Array.Empty<AuthConfig>(), new Dictionary<string, string>(),
-            new Progress<JSONMessage>(m =>
+            var buildImageContentResult = ImageContentBuidersFactory.GetImageContentBuider(lang).BuildImageContent(submission);
+            if (buildImageContentResult.content == null)
+                return (null, buildImageContentResult.error);
+            try
             {
-                if (!string.IsNullOrWhiteSpace(m.Stream))
-                    logs.Add(m.Stream);
-            }));
-            foreach (var log in logs)
-            {
-                var match = Regex.Match(log, @"Successfully built (.*)\n");
-                if (match.Success)
-                    return match.Groups[1].Value;
+                var logs = new List<string>();
+                await dockerClient.Images.BuildImageFromDockerfileAsync(new ImageBuildParameters(), buildImageContentResult.content, Array.Empty<AuthConfig>(), new Dictionary<string, string>(),
+                new Progress<JSONMessage>(m =>
+                {
+                    if (!string.IsNullOrWhiteSpace(m.Stream))
+                        logs.Add(m.Stream);
+                }));
+
+                foreach (var log in logs)
+                {
+                    var match = Regex.Match(log, @"Successfully built (.*)\n");
+                    if (match.Success)
+                        return (match.Groups[1].Value, null);
+
+                }
+                var errorBuilder = new StringBuilder().AppendLine("Couldn't find an image ID in image build logs:");
+                foreach (var log in logs)
+                    errorBuilder.AppendLine(log);
+
+                return (null, errorBuilder.ToString());
             }
-            return null;
+            finally
+            {
+                buildImageContentResult.content.Dispose();
+            }
         }
 
-        static Stream GetSubmissionStream(DirectoryInfo submission, string dockerFile)
+        static async Task<(string containerId, string error)> CreateContainer(DockerClient dockerClient, string lang, DirectoryInfo submission)
         {
-            var tarball = new MemoryStream();
-            using var archive = new TarOutputStream(tarball, Encoding.UTF8)
-            {
-                IsStreamOwner = false
-            };
-            using var dockerfileStream = new MemoryStream(Encoding.UTF8.GetBytes(dockerFile));
-            TarAppFile(null, "Dockerfile", dockerfileStream, archive);
-            TarAppDir("app", submission, archive);
-            archive.Close();
-            tarball.Position = 0;
-            return tarball;
-        }
-        static void TarAppDir(string rootPath, DirectoryInfo submission, TarOutputStream archive)
-        {
-            foreach (var file in submission.GetFiles())
-            {
-                using var fileStream = file.OpenRead();
-                TarAppFile(rootPath, file.Name, fileStream, archive);
-            }
-            foreach (var dir in submission.GetDirectories())
-                TarAppDir(Path.Combine(rootPath, dir.Name), dir, archive);
-        }
-        static void TarAppFile(string rootPath, string fileName, Stream fileStream, TarOutputStream archive)
-        {
-            var submissionEntry = TarEntry.CreateTarEntry(string.IsNullOrWhiteSpace(rootPath) ? fileName : Path.Combine(rootPath, fileName));
-            submissionEntry.Size = fileStream.Length;
-            submissionEntry.TarHeader.Mode = Convert.ToInt32("100755", 8); //chmod 755
-            archive.PutNextEntry(submissionEntry);
-            var submissionData = new byte[fileStream.Length];
-            fileStream.Read(submissionData, 0, submissionData.Length);
-            archive.Write(submissionData, 0, submissionData.Length);
-            archive.CloseEntry();
-        }
-
-        static async Task<string> CreateContainer(DockerClient dockerClient, string lang, DirectoryInfo submission)
-        {
-            var imageId = await BuildImage(dockerClient, lang, submission);
-            if (imageId == null)
-                return null;
+            var imageBuildRes = await BuildImage(dockerClient, lang, submission);
+            if (imageBuildRes.imageId == null)
+                return (null, imageBuildRes.error);
             var resp = await dockerClient.Containers.CreateContainerAsync(new CreateContainerParameters()
             {
-                Image = imageId,
+                Image = imageBuildRes.imageId,
                 AttachStdin = true,
                 AttachStdout = true,
                 AttachStderr = true,
                 StdinOnce = true,
                 OpenStdin = true
             });
-            return resp.ID;
+            return (resp.ID, null);
         }
 
         static async Task<(bool? resp, string err, TimeSpan? execTime)> RunSubmissionForCode(DockerClient dockerClient, string containerId, FileInfo code)
