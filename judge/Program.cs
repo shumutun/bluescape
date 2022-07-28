@@ -106,24 +106,27 @@ namespace Judge
             try
             {
                 var logs = new List<string>();
-                await dockerClient.Images.BuildImageFromDockerfileAsync(new ImageBuildParameters(), buildImageContentResult.content, Array.Empty<AuthConfig>(), new Dictionary<string, string>(),
+                await dockerClient.Images.BuildImageFromDockerfileAsync(new ImageBuildParameters
+                {
+                    //Tags = new[] { imageTag }
+                }, buildImageContentResult.content, Array.Empty<AuthConfig>(), new Dictionary<string, string>(),
                 new Progress<JSONMessage>(m =>
                 {
                     if (!string.IsNullOrWhiteSpace(m.Stream))
                         logs.Add(m.Stream);
                 }));
 
-                foreach (var log in logs)
-                {
-                    var match = Regex.Match(log, @"Successfully built (.*)\n");
-                    if (match.Success)
-                        return (match.Groups[1].Value, null);
+                var lastLog = logs.Last();
+                var match = Regex.Match(lastLog, @"Successfully built ([a-z0-9]+)\n");
+                if (match.Success)
+                    return (match.Groups[1].Value, null);
+                match = Regex.Match(lastLog, @"---> ([a-z0-9]+)\n");
+                if (match.Success)
+                    return (match.Groups[1].Value, null);
 
-                }
                 var errorBuilder = new StringBuilder().AppendLine("Couldn't find an image ID in image build logs:");
                 foreach (var log in logs)
                     errorBuilder.AppendLine(log);
-
                 return (null, errorBuilder.ToString());
             }
             finally

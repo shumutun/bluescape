@@ -48,20 +48,6 @@ namespace judge.ImageContent
             return (dockerfileTemplate.Replace("<RunFileName>", $"{runFileNameMatch.Groups[1].Value}"), null);
         }
 
-        protected static Stream GetSubmissionStream(DirectoryInfo submission, string dockerFile)
-        {
-            var tarball = new MemoryStream();
-            using var archive = new TarOutputStream(tarball, Encoding.UTF8)
-            {
-                IsStreamOwner = false
-            };
-            using var dockerfileStream = new MemoryStream(Encoding.UTF8.GetBytes(dockerFile));
-            TarAppFile(null, "Dockerfile", dockerfileStream, archive);
-            TarAppDir("app", submission, archive);
-            archive.Close();
-            tarball.Position = 0;
-            return tarball;
-        }
         protected static void TarAppDir(string rootPath, DirectoryInfo submission, TarOutputStream archive)
         {
             foreach (var file in submission.GetFiles())
