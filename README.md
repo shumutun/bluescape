@@ -29,17 +29,22 @@ The solution implies that test data and candidates' submissions are located in a
 |   |   |-02_False.txt
 |   |-submissions
 |   |   |-typescript
-|   |   |   |-candidate1
-|   |   |   |	|-candidate1.ts
-|   |   |   |	|-
-|   |   |   |-candidate2
-|   |   |   |	|-candidate2.ts
-|   |   |   |	|-
+|   |   |   |-candidate1_server
+|   |   |   |	|-server.ts
+|   |   |   |	|-package.json
+|   |   |   |	|-tsconfig.json
+|   |   |   |-candidate2_bluescape
+|   |   |   |	|-node_modules
+|   |   |   |	|	|-typescript
+|   |   |   |	|	|	|-<files>
+|   |   |   |	|-bluescape.ts
+|   |   |   |	|-package.json
+|   |   |   |	|-tsconfig.json
 |   |   |-python
-|   |   |   |-candidate3
-|   |   |   |	|-candidate3.py
-|   |   |   |-candidate4
-|   |   |   |	|-candidate4.py
+|   |   |   |-candidate3_app
+|   |   |   |	|-app.py
+|   |   |   |-candidate4_script
+|   |   |   |	|-script.py
 ```
 
 #### Codes
@@ -66,7 +71,7 @@ The current version supports the following languages:
 * typescript
 * python
 
-Inside a submission subdirectory should be a file with the same name as the subdirectory name. It will be used as a run file
+Inside a submission subdirectory should be a file with the same name as the subdirectory name. It will be used as a run file.
 
 ### Run
 To run the application the assessments directory should be mapped to the /app/assessments directory in its docker container. The following command runs the application:
