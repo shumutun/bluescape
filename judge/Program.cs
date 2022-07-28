@@ -1,6 +1,7 @@
 ﻿using Docker.DotNet;
 using Docker.DotNet.Models;
 using ICSharpCode.SharpZipLib.Tar;
+using judge.ImageContent;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -57,7 +58,7 @@ namespace Judge
             var codes = ParseCodes(codesDir).ToArray();
             foreach (var languageSubmissions in submissionsDir.GetDirectories())
             {
-                foreach (var submission in languageSubmissions.GetFiles())
+                foreach (var submission in languageSubmissions.GetDirectories())
                 {
                     Console.Write($"The judge reviewing the case '{submission.Name}'...");
                     var res = await RunSubmission(dockerClient, languageSubmissions.Name, submission, codes);
@@ -77,7 +78,7 @@ namespace Judge
             }
         }
 
-        static async Task<string> RunSubmission(DockerClient dockerClient, string lang, FileInfo submission, (FileInfo fileInfo, bool expectedRes)[] codes)
+        static async Task<string> RunSubmission(DockerClient dockerClient, string lang, DirectoryInfo submission, (FileInfo fileInfo, bool expectedRes)[] codes)
         {
 
             var containerId = await CreateContainer(dockerClient, lang, submission);
@@ -98,14 +99,9 @@ namespace Judge
             return $"Score: {successCount} / {codes.Length} in {TimeSpan.FromMilliseconds(execTime).ToString("c")}";
         }
 
-        static async Task<string> BuildImage(DockerClient dockerClient, string lang, FileInfo submission)
+        static async Task<string> BuildImage(DockerClient dockerClient, string lang, DirectoryInfo submission)
         {
-            const string dockerfilesTemplateDir = "/app/Dockerfiles";
-
-            var dockerfileTemplate = File.ReadAllText(Path.Combine(dockerfilesTemplateDir, lang));
-            var dockerfile = dockerfileTemplate.Replace("<RunFileName>", submission.Name);
-            using var content = GetSubmissionStream(submission, dockerfile);
-
+            using var content = ImageContentBuidersFactory.GetImageContentBuider(lang).BuildImageContent(submission);
             var logs = new List<string>();
             await dockerClient.Images.BuildImageFromDockerfileAsync(new ImageBuildParameters(), content, Array.Empty<AuthConfig>(), new Dictionary<string, string>(),
             new Progress<JSONMessage>(m =>
@@ -122,15 +118,33 @@ namespace Judge
             return null;
         }
 
-        static Stream GetSubmissionStream(FileInfo submission, string dockerFile)
+        static Stream GetSubmissionStream(DirectoryInfo submission, string dockerFile)
         {
             var tarball = new MemoryStream();
             using var archive = new TarOutputStream(tarball, Encoding.UTF8)
             {
                 IsStreamOwner = false
             };
-            using var fileStream = submission.OpenRead();
-            var submissionEntry = TarEntry.CreateTarEntry($"app/{submission.Name}");
+            using var dockerfileStream = new MemoryStream(Encoding.UTF8.GetBytes(dockerFile));
+            TarAppFile(null, "Dockerfile", dockerfileStream, archive);
+            TarAppDir("app", submission, archive);
+            archive.Close();
+            tarball.Position = 0;
+            return tarball;
+        }
+        static void TarAppDir(string rootPath, DirectoryInfo submission, TarOutputStream archive)
+        {
+            foreach (var file in submission.GetFiles())
+            {
+                using var fileStream = file.OpenRead();
+                TarAppFile(rootPath, file.Name, fileStream, archive);
+            }
+            foreach (var dir in submission.GetDirectories())
+                TarAppDir(Path.Combine(rootPath, dir.Name), dir, archive);
+        }
+        static void TarAppFile(string rootPath, string fileName, Stream fileStream, TarOutputStream archive)
+        {
+            var submissionEntry = TarEntry.CreateTarEntry(string.IsNullOrWhiteSpace(rootPath) ? fileName : Path.Combine(rootPath, fileName));
             submissionEntry.Size = fileStream.Length;
             submissionEntry.TarHeader.Mode = Convert.ToInt32("100755", 8); //chmod 755
             archive.PutNextEntry(submissionEntry);
@@ -138,20 +152,9 @@ namespace Judge
             fileStream.Read(submissionData, 0, submissionData.Length);
             archive.Write(submissionData, 0, submissionData.Length);
             archive.CloseEntry();
-
-            var dockerfileEntry = TarEntry.CreateTarEntry("Dockerfile");
-            dockerfileEntry.Size = dockerFile.Length;
-            dockerfileEntry.TarHeader.Mode = Convert.ToInt32("100755", 8); //chmod 755
-            archive.PutNextEntry(dockerfileEntry);
-            archive.Write(Encoding.UTF8.GetBytes(dockerFile), 0, dockerFile.Length);
-            archive.CloseEntry();
-
-            archive.Close();
-            tarball.Position = 0;
-            return tarball;
         }
 
-        static async Task<string> CreateContainer(DockerClient dockerClient, string lang, FileInfo submission)
+        static async Task<string> CreateContainer(DockerClient dockerClient, string lang, DirectoryInfo submission)
         {
             var imageId = await BuildImage(dockerClient, lang, submission);
             if (imageId == null)

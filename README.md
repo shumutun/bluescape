@@ -10,7 +10,7 @@ To make candidates' assessments check faster and easier a judge application is n
 ## Solution
 The current solution is a .NET Core application, that communicates with the docker API to wrap candidates' submissions in docker images and run them as docker containers against test data to check them and generate a report.
 
-For security and usability reasons the application itself wraps in a docker image and could be run as a docker container against a well-structured folder that contains test data and candidates submissions. 
+For usability reasons the application itself wraps in a docker image and could be run as a docker container against a well-structured folder that contains test data and candidates submissions. 
 
 The solution allows to keep all test containers and images in a single place and delete them on complete.
 
@@ -29,11 +29,17 @@ The solution implies that test data and candidates' submissions are located in a
 |   |   |-02_False.txt
 |   |-submissions
 |   |   |-typescript
-|   |   |   |-candidate1.ts
-|   |   |   |-candidate2.js
+|   |   |   |-candidate1
+|   |   |   |	|-candidate1.ts
+|   |   |   |	|-
+|   |   |   |-candidate2
+|   |   |   |	|-candidate2.ts
+|   |   |   |	|-
 |   |   |-python
-|   |   |   |-candidate3.py
-|   |   |   |-candidate4.py
+|   |   |   |-candidate3
+|   |   |   |	|-candidate3.py
+|   |   |   |-candidate4
+|   |   |   |	|-candidate4.py
 ```
 
 #### Codes
@@ -55,12 +61,12 @@ The regexp that is used to parse a code filename:
 ```
 
 #### Submissions
-The submissions subdirectory should contain candidates' submissions. Each submission should be placed in the corresponding subfolder depending on in what language it was written.
+The submissions subdirectory should contain candidates' submissions. Each submission should be placed in the corresponding subdirectory depending on in what language it was written.
 The current version supports the following languages:
 * typescript
 * python
 
-A submission should be a single file that contains all necessary inside.
+Inside a submission subdirectory should be a file with the same name as the subdirectory name. It will be used as a run file
 
 ### Run
 To run the application the assessments directory should be mapped to the /app/assessments directory in its docker container. The following command runs the application:
