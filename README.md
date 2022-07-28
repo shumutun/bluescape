@@ -1,4 +1,4 @@
-# Candidates' assessments judge.
+# Take-home assignments judge
 
 ## About
 During an interview potential candidates complete a take-home assignment. 
