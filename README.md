@@ -81,7 +81,7 @@ which is mean that the rest of a subdirectory name after _ will be used to deter
 To run the application the assessments directory should be mapped to the /app/assessments directory in its docker container. The following command runs the application:
 
 ```console
-docker run --privileged -it -v assessments:/app/assesments shumutun/bluescape-judge:1.4
+docker run --privileged -it -v assessments:/app/assesments shumutun/bluescape-judge:1.5
 ```
 The first runs of each type of submission (for each language) will take additional time to download and cache its base images (e.g., python base image, node base image, etc.).
 
