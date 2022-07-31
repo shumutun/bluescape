@@ -1,8 +1,8 @@
-﻿using Judge.ImageContent.Typescript;
-using Judge.ImageContent.Typescript.Python;
+﻿using Judge.Docker.ImagesContent.Python;
+using Judge.Docker.ImagesContent.Typescript;
 using System;
 
-namespace Judge.Docker.ImageContent
+namespace Judge.Docker.ImagesContent
 {
     public class ImageContentBuidersFactory : IImageContentBuidersFactory
     {

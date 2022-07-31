@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace Judge.Docker.ImageContent
+namespace Judge.Docker.ImagesContent
 {
     public interface IImageContentBuider
     {

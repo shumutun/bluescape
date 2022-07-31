@@ -1,11 +1,10 @@
 ﻿using ICSharpCode.SharpZipLib.Tar;
-using Judge.Docker.ImageContent;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.IO;
 using System.Text;
 
-namespace Judge.ImageContent.Typescript
+namespace Judge.Docker.ImagesContent.Typescript
 {
     public class TypescriptImageContentBuider : ImageContentBuider
     {

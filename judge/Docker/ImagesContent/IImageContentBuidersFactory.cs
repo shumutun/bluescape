@@ -1,4 +1,4 @@
-﻿namespace Judge.Docker.ImageContent
+﻿namespace Judge.Docker.ImagesContent
 {
     public interface IImageContentBuidersFactory
     {

@@ -1,6 +1,6 @@
 ﻿using Docker.DotNet;
 using Docker.DotNet.Models;
-using Judge.Docker.ImageContent;
+using Judge.Docker.ImagesContent;
 using System;
 using System.Collections.Generic;
 using System.IO;

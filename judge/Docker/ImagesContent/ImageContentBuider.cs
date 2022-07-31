@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Judge.Docker.ImageContent
+namespace Judge.Docker.ImagesContent
 {
     public abstract class ImageContentBuider : IImageContentBuider
     {
@@ -52,7 +52,7 @@ namespace Judge.Docker.ImageContent
         protected static string? GetDockerfileTemplate(Languages language)
         {
             var assembly = typeof(ImageContentBuidersFactory).Assembly;
-            using var stream = assembly.GetManifestResourceStream($"judge.ImageContent.{language}.Dockerfile");
+            using var stream = assembly.GetManifestResourceStream($"Judge.Docker.ImagesContent.{language}.DockerfileTemplate");
             if (stream == null)
                 return null;
             using var reader = new StreamReader(stream);

@@ -1,6 +1,4 @@
-﻿using Judge.Docker.ImageContent;
-
-namespace Judge.ImageContent.Typescript.Python
+﻿namespace Judge.Docker.ImagesContent.Python
 {
     public class PythonImageContentBuider : ImageContentBuider
     {
