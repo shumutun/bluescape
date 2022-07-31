@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:3.1-alpine AS build
 WORKDIR /build
 COPY . .
-RUN dotnet publish judge/judge.csproj -c Release -o /app
+RUN dotnet publish Judge/Judge.csproj -c Release -o /app
 
 # Build runtime image
 FROM docker:dind-rootless
@@ -22,4 +22,4 @@ RUN dotnet --info
 
 COPY --from=build /app /app
 
-ENTRYPOINT dockerd-entrypoint.sh > /dev/null 2>&1 & dotnet /app/judge.dll
+ENTRYPOINT dockerd-entrypoint.sh > /dev/null 2>&1 & dotnet /app/Judge.dll
