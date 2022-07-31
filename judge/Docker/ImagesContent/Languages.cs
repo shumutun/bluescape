@@ -1,4 +1,4 @@
-﻿namespace judge.ImageContent
+﻿namespace Judge.Docker.ImageContent
 {
     public enum Languages
     {

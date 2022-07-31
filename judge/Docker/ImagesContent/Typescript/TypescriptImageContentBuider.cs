@@ -1,18 +1,17 @@
 ﻿using ICSharpCode.SharpZipLib.Tar;
+using Judge.Docker.ImageContent;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
 using System.IO;
 using System.Text;
-using System.Text.RegularExpressions;
 
-namespace judge.ImageContent.Typescript
+namespace Judge.ImageContent.Typescript
 {
     public class TypescriptImageContentBuider : ImageContentBuider
     {
         protected override Languages Language => Languages.Typescript;
 
-        protected override (bool success, string error) AddSubmissionContent(string rootPath, TarOutputStream archive, DirectoryInfo submission)
+        protected override string? AddSubmissionContent(string rootPath, TarOutputStream archive, DirectoryInfo submission)
         {
             const string tsconfigFileName = "tsconfig.json";
 
@@ -21,6 +20,8 @@ namespace judge.ImageContent.Typescript
                 if (file.Name == tsconfigFileName)
                 {
                     var tsconfig = HandleTsConfig(file);
+                    if (tsconfig == null)
+                        return $"Invalid {tsconfigFileName}";
                     using var tsconfigStream = new MemoryStream(Encoding.UTF8.GetBytes(tsconfig));
                     TarAppFile(rootPath, file.Name, tsconfigStream, archive);
                     tsconfigHandled = true;
@@ -31,21 +32,24 @@ namespace judge.ImageContent.Typescript
                     TarAppFile(rootPath, file.Name, fileStream, archive);
                 }
             if (!tsconfigHandled)
-                return (false, $"{tsconfigFileName} not found");
+                return $"{tsconfigFileName} not found";
 
             foreach (var dir in submission.GetDirectories())
                 TarAppDir(Path.Combine(rootPath, dir.Name), dir, archive);
 
-            return (true, null);
+            return null;
         }
 
-        private string HandleTsConfig(FileInfo tsconfig)
+        private string? HandleTsConfig(FileInfo tsconfig)
         {
             using var file = tsconfig.OpenRead();
             using var fileReader = new StreamReader(file);
             using var reader = new JsonTextReader(fileReader);
             var jDoc = JToken.ReadFrom(reader);
-            jDoc["compilerOptions"]["outDir"] = "./build";
+            var compilerOptions = jDoc["compilerOptions"];
+            if (compilerOptions == null)
+                return null;
+            compilerOptions["outDir"] = "./build";
             return jDoc.ToString(Formatting.Indented);
         }
     }

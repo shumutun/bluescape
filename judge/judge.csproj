@@ -3,15 +3,16 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <nullable>enable</nullable>
     <Version>1.4</Version>
     <Authors>shumutun</Authors>
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="ImageContent\Python\Dockerfile">
+    <EmbeddedResource Include="Docker\ImagesContent\Python\Dockerfile">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
-    <EmbeddedResource Include="ImageContent\Typescript\Dockerfile">
+    <EmbeddedResource Include="Docker\ImagesContent\Typescript\Dockerfile">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>

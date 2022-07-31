@@ -1,4 +1,6 @@
-﻿namespace judge.ImageContent.Typescript.Python
+﻿using Judge.Docker.ImageContent;
+
+namespace Judge.ImageContent.Typescript.Python
 {
     public class PythonImageContentBuider : ImageContentBuider
     {

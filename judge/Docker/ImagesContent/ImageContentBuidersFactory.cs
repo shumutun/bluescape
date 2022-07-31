@@ -1,13 +1,12 @@
-﻿using judge.ImageContent.Typescript;
-using judge.ImageContent.Typescript.Python;
+﻿using Judge.ImageContent.Typescript;
+using Judge.ImageContent.Typescript.Python;
 using System;
-using System.IO;
 
-namespace judge.ImageContent
+namespace Judge.Docker.ImageContent
 {
-    public static class ImageContentBuidersFactory
+    public class ImageContentBuidersFactory : IImageContentBuidersFactory
     {
-        public static IImageContentBuider GetImageContentBuider(string lang)
+        public IImageContentBuider BuildImageContentBuider(string lang)
         {
             return lang switch
             {
@@ -16,7 +15,5 @@ namespace judge.ImageContent
                 _ => throw new ArgumentException(nameof(lang))
             };
         }
-
-
     }
 }
