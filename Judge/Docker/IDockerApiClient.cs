@@ -9,5 +9,6 @@ namespace Judge.Docker
 
         Task<Errorable<string>> CreateContainer(string lang, DirectoryInfo submission);
         Task<Errorable<string>> RunContainer(string containerId, Stream input);
+        Task RemoveContainer(string containerId);
     }
 }

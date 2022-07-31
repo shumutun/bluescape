@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Judge.Docker
@@ -60,10 +59,10 @@ namespace Judge.Docker
             {
                 var imageTag = await BuildImage(lang, submission);
                 if (imageTag.IsError)
-                    return imageTag.GetError();
+                    return imageTag.Error;
                 var resp = await _dockerClient.Containers.CreateContainerAsync(new CreateContainerParameters()
                 {
-                    Image = imageTag.GetValue(),
+                    Image = imageTag.Value,
                     AttachStdin = true,
                     AttachStdout = true,
                     AttachStderr = true,
@@ -77,14 +76,14 @@ namespace Judge.Docker
                 var imageContentBuilder = _imageContentBuidersFactory.BuildImageContentBuider(lang);
                 using var imageContent = imageContentBuilder.BuildImageContent(submission);
                 if (imageContent.IsError)
-                    return imageContent.GetError();
+                    return imageContent.Error;
 
                 var imageTag = $"{lang}_{submission.Name}:latest";
                 var logs = new List<string>();
                 await _dockerClient.Images.BuildImageFromDockerfileAsync(new ImageBuildParameters
                 {
                     Tags = new[] { imageTag }
-                }, imageContent.GetValue(), Array.Empty<AuthConfig>(), new Dictionary<string, string>(),
+                }, imageContent.Value, Array.Empty<AuthConfig>(), new Dictionary<string, string>(),
                 new Progress<JSONMessage>(m =>
                 {
                     if (!string.IsNullOrWhiteSpace(m.Stream))
@@ -143,6 +142,30 @@ namespace Judge.Docker
                     offset += readed;
                 }
                 while (offset < input.Length);
+            }
+
+            public async Task RemoveContainer(string containerId)
+            {
+                var cotainers = await _dockerClient.Containers.ListContainersAsync(new ContainersListParameters
+                {
+                    All = true,
+                    Filters = new Dictionary<string, IDictionary<string, bool>>
+                    {
+                        { "id", new Dictionary<string, bool> { { containerId, true} } }
+                    }
+                });
+
+                await _dockerClient.Containers.RemoveContainerAsync(containerId, new ContainerRemoveParameters
+                {
+                    Force = true,
+                    RemoveVolumes = true
+                });
+
+                var deletedImages = await _dockerClient.Images.DeleteImageAsync(cotainers.Single().Image, new ImageDeleteParameters
+                {
+                    Force = true,
+                    NoPrune = false
+                });
             }
         }
     }

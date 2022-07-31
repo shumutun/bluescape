@@ -36,27 +36,34 @@ namespace Judge.Submissions
             var containerId = await _dockerClient.CreateContainer(lang, submission);
             if (containerId.IsError)
             {
-                report.AppendLine($"Failed to create a container: {containerId.GetError()}");
+                report.AppendLine($"Failed to create a container: {containerId.Error}");
                 return;
             }
-            var successCount = 0;
-            foreach (var code in _codes)
+            try
             {
-                report.Append($"\tCode {code.File.Name}...");
-                using var input = code.File.OpenRead();
-                var startTime = DateTime.UtcNow;
-                var res = await _dockerClient.RunContainer(containerId.GetValue(), input);
-                if (res.IsError)
+                var successCount = 0;
+                foreach (var code in _codes)
                 {
-                    report.AppendLine($" Error occurred while checking the code '{code.File.Name}': {res.GetError()}");
-                    continue;
+                    report.Append($"\tCode {code.File.Name}...");
+                    using var input = code.File.OpenRead();
+                    var startTime = DateTime.UtcNow;
+                    var res = await _dockerClient.RunContainer(containerId.Value, input);
+                    if (res.IsError)
+                    {
+                        report.AppendLine($" Error occurred while checking the code '{code.File.Name}': {res.Error}");
+                        continue;
+                    }
+                    if (string.Equals(res.Value, code.ExpectedRes, StringComparison.OrdinalIgnoreCase))
+                        successCount++;
+
+                    report.AppendLine($" Expected: '{code.ExpectedRes}'; Recieved: '{res.Value}'; in {DateTime.UtcNow - startTime:c}");
                 }
-                if (string.Equals(res.GetValue(), code.ExpectedRes, StringComparison.OrdinalIgnoreCase))
-                    successCount++;
-                
-                report.AppendLine($" Expected: '{code.ExpectedRes}'; Recieved: '{res.GetValue()}'; in {DateTime.UtcNow - startTime:c}");
+                report.AppendLine($"\tScore: {successCount} / {_codes.Count}");
             }
-            report.AppendLine($"\tScore: {successCount} / {_codes.Count}");
+            finally
+            {
+                await _dockerClient.RemoveContainer(containerId.Value);
+            }
         }
     }
 }

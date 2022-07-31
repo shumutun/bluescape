@@ -9,6 +9,24 @@ namespace Judge
         private readonly string? _error;
 
         public bool IsError => _error != null;
+        public T Value
+        {
+            get
+            {
+                if (_value == null)
+                    throw new NullReferenceException();
+                return _value;
+            }
+        }
+        public string Error
+        {
+            get
+            {
+                if (_error == null)
+                    throw new NullReferenceException();
+                return _error;
+            }
+        }
 
         public Errorable(T value)
         {
@@ -19,18 +37,7 @@ namespace Judge
             _error = error;
         }
 
-        public T GetValue()
-        {
-            if (_value == null)
-                throw new NullReferenceException();
-            return _value;
-        }
-        public string GetError()
-        {
-            if (_error == null)
-                throw new NullReferenceException();
-            return _error;
-        }
+        
         public void Dispose()
         {
             (_value as IDisposable)?.Dispose();

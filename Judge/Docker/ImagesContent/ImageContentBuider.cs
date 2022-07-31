@@ -12,7 +12,7 @@ namespace Judge.Docker.ImagesContent
         {
             var dockerfileContentRes = GetDockerfileContent(submission);
             if (dockerfileContentRes.IsError)
-                return dockerfileContentRes.GetError();
+                return dockerfileContentRes.Error;
 
             var tarball = new MemoryStream();
             using var archive = new TarOutputStream(tarball, Encoding.UTF8)
@@ -20,7 +20,7 @@ namespace Judge.Docker.ImagesContent
                 IsStreamOwner = false
             };
 
-            using var dockerfileStream = new MemoryStream(Encoding.UTF8.GetBytes(dockerfileContentRes.GetValue()));
+            using var dockerfileStream = new MemoryStream(Encoding.UTF8.GetBytes(dockerfileContentRes.Value));
             TarAppFile(null, "Dockerfile", dockerfileStream, archive);
 
             var addSubmissionContentError = AddSubmissionContent("app", archive, submission);
