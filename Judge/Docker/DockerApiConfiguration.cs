@@ -58,12 +58,12 @@ namespace Judge.Docker
 
             public async Task<Errorable<string>> CreateContainer(string lang, DirectoryInfo submission)
             {
-                var imageId = await BuildImage(lang, submission);
-                if (imageId.IsError)
-                    return imageId.GetError();
+                var imageTag = await BuildImage(lang, submission);
+                if (imageTag.IsError)
+                    return imageTag.GetError();
                 var resp = await _dockerClient.Containers.CreateContainerAsync(new CreateContainerParameters()
                 {
-                    Image = imageId.GetValue(),
+                    Image = imageTag.GetValue(),
                     AttachStdin = true,
                     AttachStdout = true,
                     AttachStderr = true,
@@ -79,7 +79,7 @@ namespace Judge.Docker
                 if (imageContent.IsError)
                     return imageContent.GetError();
 
-                var imageTag = $"{lang}_{submission.Name}";
+                var imageTag = $"{lang}_{submission.Name}:latest";
                 var logs = new List<string>();
                 await _dockerClient.Images.BuildImageFromDockerfileAsync(new ImageBuildParameters
                 {
@@ -90,16 +90,10 @@ namespace Judge.Docker
                     if (!string.IsNullOrWhiteSpace(m.Stream))
                         logs.Add(m.Stream);
                 }));
+                if (logs.Last() == $"Successfully tagged {imageTag}\n")
+                    return new Errorable<string>(imageTag);
 
-                var lastLog = logs.Last();
-                var match = Regex.Match(lastLog, @"Successfully built ([a-z0-9]+)\n");
-                if (match.Success)
-                    return new Errorable<string>(match.Groups[1].Value);
-                match = Regex.Match(lastLog, @"---> ([a-z0-9]+)\n");
-                if (match.Success)
-                    return new Errorable<string>(match.Groups[1].Value);
-
-                var errorBuilder = new StringBuilder().AppendLine("Couldn't find an image ID in image build logs:");
+                var errorBuilder = new StringBuilder().AppendLine("An image was build with errors:");
                 foreach (var log in logs)
                     errorBuilder.AppendLine(log);
                 return errorBuilder.ToString();
@@ -126,7 +120,7 @@ namespace Judge.Docker
                     return await GetError(containerId);
 
                 var (stdout, stderr) = await stream.ReadOutputToEndAsync(default);
-                return new Errorable<string>(stdout);
+                return new Errorable<string>(new string(stdout.Where(c => !char.IsControl(c)).ToArray()));
             }
             private async Task<string> GetError(string containerId)
             {

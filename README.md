@@ -57,12 +57,12 @@ The codes subdirectory should contain codes that need to be used to check submis
 where:
 ```console
 <SerialNumber>      - is a serial number of a code;
-<ExpectedResult>    - True or False.
+<ExpectedResult>    - expected result (case sensitive).
 ```
 
 The regex pattern that is used to parse a code filename: 
 ```console
-.*_(True|False)\.txt
+.*_(.*)\..+
 ```
 
 #### Submissions

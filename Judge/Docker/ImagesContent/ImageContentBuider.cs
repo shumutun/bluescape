@@ -49,9 +49,9 @@ namespace Judge.Docker.ImagesContent
 
             return new Errorable<string>(value: dockerfileTemplate.Replace("<RunFileName>", $"{runFileNameMatch.Groups[1].Value}"));
         }
-        protected static string? GetDockerfileTemplate(Languages language)
+        protected string? GetDockerfileTemplate(Languages language)
         {
-            var assembly = typeof(ImageContentBuidersFactory).Assembly;
+            var assembly = GetType().Assembly;
             using var stream = assembly.GetManifestResourceStream($"Judge.Docker.ImagesContent.{language}.DockerfileTemplate");
             if (stream == null)
                 return null;

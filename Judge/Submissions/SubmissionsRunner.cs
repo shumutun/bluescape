@@ -32,31 +32,31 @@ namespace Judge.Submissions
 
         private async Task RunSubmission(DirectoryInfo submission, string lang, StringBuilder report)
         {
-            report.Append($"The judge reviewing the case '{lang}: {submission.Name}'...");
+            report.AppendLine($"The judge is considering the case '{lang}: {submission.Name}'");
             var containerId = await _dockerClient.CreateContainer(lang, submission);
             if (containerId.IsError)
             {
-                report.AppendLine(containerId.GetError());
+                report.AppendLine($"Failed to create a container: {containerId.GetError()}");
                 return;
             }
             var successCount = 0;
-            var execTime = TimeSpan.Zero;
             foreach (var code in _codes)
             {
+                report.Append($"\tCode {code.File.Name}...");
                 using var input = code.File.OpenRead();
-                var startTime = DateTime.Now;
+                var startTime = DateTime.UtcNow;
                 var res = await _dockerClient.RunContainer(containerId.GetValue(), input);
                 if (res.IsError)
                 {
-                    report.AppendLine($"Error occured while checking the code '{code.File.Name}': {res.GetError()}");
+                    report.AppendLine($" Error occurred while checking the code '{code.File.Name}': {res.GetError()}");
                     continue;
                 }
                 if (string.Equals(res.GetValue(), code.ExpectedRes, StringComparison.OrdinalIgnoreCase))
                     successCount++;
-
-                execTime.Add(DateTime.UtcNow - startTime);
+                
+                report.AppendLine($" Expected: '{code.ExpectedRes}'; Recieved: '{res.GetValue()}'; in {DateTime.UtcNow - startTime:c}");
             }
-            report.AppendLine($"Score: {successCount} / {_codes.Count} in {execTime:c}");
+            report.AppendLine($"\tScore: {successCount} / {_codes.Count}");
         }
     }
 }
