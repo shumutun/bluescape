@@ -133,7 +133,7 @@ namespace Judge.Docker
             static async Task WriteFileToStdin(Stream input, MultiplexedStream stream)
             {
                 var offset = 0;
-                var buffer = new byte[1000];
+                var buffer = new byte[20000000];
                 do
                 {
                     var readed = input.Read(buffer, offset, buffer.Length);
