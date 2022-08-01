@@ -132,16 +132,14 @@ namespace Judge.Docker
             }
             static async Task WriteFileToStdin(Stream input, MultiplexedStream stream)
             {
-                var offset = 0;
-                var buffer = new byte[20000000];
+                var readed = 0;
+                var buffer = new byte[1024 * 1024];
                 do
                 {
-                    var readed = input.Read(buffer, offset, buffer.Length);
-                    if (readed > 0)
-                        await stream.WriteAsync(buffer, offset, readed, default);
-                    offset += readed;
+                    readed = input.Read(buffer, 0, buffer.Length);
+                    await stream.WriteAsync(buffer, 0, readed, default);
                 }
-                while (offset < input.Length);
+                while (readed > 0);
             }
 
             public async Task RemoveContainer(string containerId)
