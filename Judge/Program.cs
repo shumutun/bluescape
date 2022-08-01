@@ -35,7 +35,7 @@ namespace Judge
             var codes = new CodesSet(codesDir);
             if (codes.HasErrors)
             {
-                Console.WriteLine($"Code were parsed with errors:");
+                Console.WriteLine($"Codes were parsed with errors:");
                 foreach (var error in codes.GetErrors())
                     Console.WriteLine(error);
             }
