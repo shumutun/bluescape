@@ -13,7 +13,7 @@ namespace Judge
         {
             try
             {
-                Console.WriteLine("Startig a court session...");
+                Console.WriteLine("A court session is starting...");
                 MainAsync(args).Wait();
                 Console.WriteLine("The court session is over!");
             }
@@ -26,8 +26,8 @@ namespace Judge
 
         static async Task MainAsync(string[] args)
         {
-            const string path = "/app/assesments";
-            //const string path = "../../bluescape-judge-assesments";
+            //const string path = "/app/assesments";
+            const string path = "../../../../../bluescape-judge-assesments";
 
             var submissionsDir = new DirectoryInfo(Path.Combine(path, "submissions"));
             var codesDir = new DirectoryInfo(Path.Combine(path, "codes"));
